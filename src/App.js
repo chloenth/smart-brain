@@ -7,6 +7,7 @@ import Rank from './components/Rank/Rank';
 import ParticlesBg from 'particles-bg';
 import FaceRecognition from './components/FaceRecognition/FaceRecognition';
 import Signin from './components/Signin/Signin';
+import Register from './components/Register/Register';
 
 const returnClarifyRequestOptions = (imageUrl) => {
   // Your PAT (Personal Access Token) can be found in the Account's Security section
@@ -49,6 +50,8 @@ const returnClarifyRequestOptions = (imageUrl) => {
 function App() {
   const [imageUrl, setImageUrl] = useState('');
   const [box, setBox] = useState({});
+  const [route, setRoute] = useState('signin');
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
   const onInputChange = (e) => {
     setImageUrl(e.target.value);
@@ -85,15 +88,28 @@ function App() {
       .catch((err) => console.log(err));
   };
 
+  const onRouteChange = (route) => {
+    if (route === 'signout') setIsSignedIn(false);
+    else if (route === 'home') setIsSignedIn(true);
+    setRoute(route);
+  };
+
   return (
     <div className='App'>
       <ParticlesBg type='fountain' bg={true} />
-      <Navigation />
-      <Signin />
-      <Logo />
-      <Rank />
-      <ImageLinkForm onInputChange={onInputChange} onSubmit={onSubmit} />
-      <FaceRecognition box={box} imageUrl={imageUrl} />
+      <Navigation onRouteChange={onRouteChange} isSignedIn={isSignedIn} />
+      {route === 'home' ? (
+        <>
+          <Logo />
+          <Rank />
+          <ImageLinkForm onInputChange={onInputChange} onSubmit={onSubmit} />
+          <FaceRecognition box={box} imageUrl={imageUrl} />
+        </>
+      ) : route === 'signin' ? (
+        <Signin onRouteChange={onRouteChange} />
+      ) : (
+        <Register onRouteChange={onRouteChange} />
+      )}
     </div>
   );
 }
