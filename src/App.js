@@ -6,60 +6,27 @@ import Navigation from './components/Navigation/Navigation';
 import Rank from './components/Rank/Rank';
 import ParticlesBg from 'particles-bg';
 import FaceRecognition from './components/FaceRecognition/FaceRecognition';
-import Signin from './components/Signin/Signin';
-import Register from './components/Register/Register';
-
-const returnClarifyRequestOptions = (imageUrl) => {
-  // Your PAT (Personal Access Token) can be found in the Account's Security section
-  const PAT = process.env.PAT;
-  // Specify the correct user_id/app_id pairings
-  // Since you're making inferences outside your app's scope
-  const USER_ID = process.env.USER_ID;
-  const APP_ID = process.env.APP_ID;
-  // Change these to whatever model and image URL you want to use
-  const IMAGE_URL = imageUrl;
-
-  const raw = JSON.stringify({
-    user_app_id: {
-      user_id: USER_ID,
-      app_id: APP_ID,
-    },
-    inputs: [
-      {
-        data: {
-          image: {
-            url: IMAGE_URL,
-          },
-        },
-      },
-    ],
-  });
-
-  const requestOptions = {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Key ' + PAT,
-    },
-    body: raw,
-  };
-
-  return requestOptions;
-};
+import Form from './components/Form/Form';
 
 function App() {
   const [imageUrl, setImageUrl] = useState('');
   const [box, setBox] = useState({});
   const [route, setRoute] = useState('signin');
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [user, setUser] = useState({
+    id: '',
+    name: '',
+    email: '',
+    entries: 0,
+    joined: '',
+  });
 
   const onInputChange = (e) => {
+    setBox({});
     setImageUrl(e.target.value);
   };
 
-  const calculateFaceLocation = (data) => {
-    const clarifaiFace =
-      data.outputs[0].data.regions[0].region_info.bounding_box;
+  const calculateFaceLocation = (clarifaiFace) => {
     const image = document.getElementById('inputImage');
     const width = Number(image.width);
     const height = Number(image.height);
@@ -72,43 +39,62 @@ function App() {
     };
   };
 
-  const displayFaceBox = (box) => {
-    setBox(box);
-  };
-
-  const onSubmit = () => {
-    fetch(
-      'https://api.clarifai.com/v2/models/face-detection/outputs',
-      returnClarifyRequestOptions(imageUrl)
-    )
+  const onImageSubmit = () => {
+    fetch('http://localhost:3001/image', {
+      method: 'put',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: user.id, imageUrl }),
+    })
       .then((response) => response.json())
-      .then((result) => {
-        displayFaceBox(calculateFaceLocation(result));
+      .then((data) => {
+        setUser({ ...user, entries: data.entries });
+        const displayFaceBox = calculateFaceLocation(data.clarifaiFace);
+        setBox(displayFaceBox);
       })
       .catch((err) => console.log(err));
   };
 
   const onRouteChange = (route) => {
-    if (route === 'signout') setIsSignedIn(false);
-    else if (route === 'home') setIsSignedIn(true);
+    if (route === 'signin') {
+      setIsSignedIn(false);
+      setUser({
+        id: '',
+        name: '',
+        email: '',
+        entries: 0,
+        joined: '',
+      });
+      setImageUrl('');
+      setBox({});
+    } else if (route === 'home') setIsSignedIn(true);
     setRoute(route);
   };
 
   return (
     <div className='App'>
-      <ParticlesBg type='fountain' bg={true} />
+      <ParticlesBg
+        type='fountain'
+        bg={{
+          position: 'absolute',
+          zIndex: -1,
+          top: 0,
+          left: 0,
+          height: 1320,
+        }}
+      />
       <Navigation onRouteChange={onRouteChange} isSignedIn={isSignedIn} />
       {route === 'home' ? (
         <>
           <Logo />
-          <Rank />
-          <ImageLinkForm onInputChange={onInputChange} onSubmit={onSubmit} />
+          <Rank user={user} />
+          <ImageLinkForm
+            onInputChange={onInputChange}
+            onImageSubmit={onImageSubmit}
+          />
           <FaceRecognition box={box} imageUrl={imageUrl} />
         </>
-      ) : route === 'signin' ? (
-        <Signin onRouteChange={onRouteChange} />
       ) : (
-        <Register onRouteChange={onRouteChange} />
+        <Form route={route} onRouteChange={onRouteChange} loadUser={setUser} />
       )}
     </div>
   );
