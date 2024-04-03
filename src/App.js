@@ -40,7 +40,7 @@ function App() {
   };
 
   const onImageSubmit = () => {
-    fetch('http://localhost:3001/image', {
+    fetch('https://smart-brain-server-fgrv.onrender.com/image', {
       method: 'put',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: user.id, imageUrl }),

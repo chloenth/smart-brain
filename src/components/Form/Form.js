@@ -28,7 +28,7 @@ const Form = ({ route, onRouteChange, loadUser }) => {
           }
         : { email, password };
 
-    fetch(`http://localhost:3001/${route}`, {
+    fetch(`https://smart-brain-server-fgrv.onrender.com/${route}`, {
       method: 'post',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
