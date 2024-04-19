@@ -34,10 +34,13 @@ const Form = ({ route, onRouteChange, loadUser }) => {
       body: JSON.stringify(body),
     })
       .then((response) => response.json())
-      .then((user) => {
-        if (user.id) {
-          loadUser(user);
+      .then((response) => {
+        if (response.id) {
+          loadUser(response);
           onRouteChange('home');
+        } else {
+          alert(response);
+          clearData();
         }
       })
       .catch((err) => {
